@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111318">
+  <meta name="description" content="TIMEGRID: organiza tu tiempo y crea horarios a tu manera.">
+  <title>TIMEGRID — Organiza tu tiempo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" data-view="home" aria-label="TIMEGRID, inicio">
+        <span class="brand-mark"><span></span><span></span><span></span><span></span></span>
+        <span>TIME<span class="brand-accent">GRID</span></span>
+      </a>
+
+      <div class="sidebar-label">MENÚ</div>
+      <nav class="nav-menu" aria-label="Navegación principal">
+        <button class="nav-link active" data-view="home">
+          <span class="nav-icon">⌂</span><span>Inicio</span>
+        </button>
+        <button class="nav-link" data-view="builder">
+          <span class="nav-icon">＋</span><span>Crear horario</span>
+        </button>
+        <button class="nav-link" data-view="saved">
+          <span class="nav-icon">▦</span><span>Mis horarios</span>
+          <span class="nav-count" id="saved-count">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-tip">
+          <div class="tip-icon">✦</div>
+          <p class="tip-title">Tu tiempo, a tu manera.</p>
+          <p class="tip-copy">Organizá tus actividades y encontrá tu propio ritmo.</p>
+        </div>
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <span>Tu espacio personal</span>
+          <span class="version">v0.1</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Abrir menú">☰</button>
+        <div class="breadcrumb"><span>TIMEGRID</span><span class="breadcrumb-separator">/</span><strong id="page-name">Inicio</strong></div>
+        <div class="topbar-right"><span class="topbar-indicator"></span><span>Guardado local</span></div>
+      </header>
+
+      <section class="view active" id="view-home">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">TU ESPACIO DE ORGANIZACIÓN</p>
+            <h1>Hacé que tu tiempo<br><span>trabaje para vos.</span></h1>
+            <p class="welcome-copy">Creá horarios claros, organizá tus actividades y visualizá tu semana de un vistazo.</p>
+            <button class="button button-primary" data-view="builder">＋ <span>Crear mi primer horario</span><span class="button-arrow">↗</span></button>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="art-glow"></div>
+            <div class="art-card">
+              <div class="art-card-top"><span>MI SEMANA</span><span class="art-dots">•••</span></div>
+              <div class="art-days"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span></div>
+              <div class="art-grid">
+                <div class="art-block purple"></div><div></div><div class="art-block blue"></div><div></div><div class="art-block green"></div>
+                <div></div><div class="art-block orange"></div><div></div><div class="art-block purple short"></div><div></div>
+                <div class="art-block blue short"></div><div></div><div></div><div class="art-block green"></div><div></div>
+              </div>
+              <div class="art-caption"><span class="legend-dot purple-dot"></span> Actividades organizadas</div>
+            </div>
+            <div class="floating-chip chip-one">✦ Semana organizada</div>
+            <div class="floating-chip chip-two"><span class="status-dot"></span> Todo en orden</div>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <div><p class="eyebrow">EMPEZÁ POR ACÁ</p><h2>¿Qué querés hacer?</h2></div>
+        </div>
+        <div class="action-grid">
+          <button class="action-card" data-view="builder">
+            <span class="action-icon purple-bg">＋</span>
+            <span class="action-title">Crear un horario</span>
+            <span class="action-description">Empezá desde cero y agregá tus actividades.</span>
+            <span class="action-link">Comenzar <span>↗</span></span>
+          </button>
+          <button class="action-card" data-view="saved">
+            <span class="action-icon blue-bg">▦</span>
+            <span class="action-title">Ver mis horarios</span>
+            <span class="action-description">Consultá y administrá tus horarios guardados.</span>
+            <span class="action-link">Explorar <span>↗</span></span>
+          </button>
+          <div class="mini-stat">
+            <span class="stat-label">HORARIOS CREADOS</span>
+            <strong id="home-saved-count">00</strong>
+            <span class="stat-note">Tus horarios en un solo lugar.</span>
+            <span class="stat-decoration">✳</span>
+          </div>
+        </div>
+        <footer class="page-footer"><span>TIMEGRID © 2026</span><span>Diseñado para organizar mejor tu tiempo.</span></footer>
+      </section>
+
+      <section class="view" id="view-builder">
+        <div class="page-intro">
+          <p class="eyebrow">CONSTRUCTOR</p>
+          <h1>Creá tu <span>horario.</span></h1>
+          <p>Primero definí cómo querés llamar a este horario. Después vas a poder sumar todas tus actividades.</p>
+        </div>
+        <div class="builder-layout">
+          <div class="panel form-panel">
+            <div class="panel-heading"><div><span class="step-number">01</span><h2>Datos generales</h2></div><span class="panel-muted">PASO 1 DE 2</span></div>
+            <label class="field-label" for="schedule-name">Nombre del horario</label>
+            <input class="text-input" id="schedule-name" type="text" placeholder="Ej. Facultad 2027" maxlength="45">
+            <p class="field-hint">Elegí un nombre que te ayude a identificarlo.</p>
+            <div class="panel-divider"></div>
+            <div class="panel-heading"><div><span class="step-number">02</span><h2>Actividades</h2></div><span class="panel-muted">PRÓXIMAMENTE</span></div>
+            <div class="empty-activities"><div class="empty-icon">＋</div><strong>Todavía no hay actividades</strong><p>En el siguiente paso vas a poder agregar materias, trabajo, entrenamientos y mucho más.</p></div>
+            <button class="button button-primary button-wide" id="start-builder">Continuar <span class="button-arrow">→</span></button>
+          </div>
+          <aside class="builder-aside">
+            <div class="aside-card">
+              <span class="aside-spark">✦</span><h3>Un horario, muchas posibilidades.</h3>
+              <p>TIMEGRID se adapta a vos. No importa si estás organizando materias, turnos de trabajo o tus actividades semanales.</p>
+            </div>
+            <div class="aside-note"><span>ⓘ</span><p>Los horarios se guardarán localmente en este navegador. No necesitás crear una cuenta.</p></div>
+          </aside>
+        </div>
+        <footer class="page-footer"><span>TIMEGRID © 2026</span><span>Diseñado para organizar mejor tu tiempo.</span></footer>
+      </section>
+
+      <section class="view" id="view-saved">
+        <div class="page-intro saved-intro">
+          <div><p class="eyebrow">TU BIBLIOTECA</p><h1>Mis <span>horarios.</span></h1><p>Todos tus horarios creados, reunidos en un mismo lugar.</p></div>
+          <button class="button button-primary" data-view="builder">＋ Crear horario</button>
+        </div>
+        <div class="saved-empty panel" id="saved-empty">
+          <div class="empty-icon large">▦</div><h2>Tu biblioteca está vacía.</h2><p>Cuando crees y guardes tu primer horario, lo vas a encontrar acá.</p>
+          <button class="button button-secondary" data-view="builder">Crear mi primer horario <span>↗</span></button>
+        </div>
+        <div class="saved-list" id="saved-list"></div>
+        <footer class="page-footer"><span>TIMEGRID © 2026</span><span>Diseñado para organizar mejor tu tiempo.</span></footer>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>
