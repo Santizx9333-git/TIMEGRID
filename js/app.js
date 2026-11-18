@@ -45,17 +45,7 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
-document.getElementById("start-builder").addEventListener("click", () => {
-  const name = document.getElementById("schedule-name").value.trim();
-
-  if (!name) {
-    document.getElementById("schedule-name").focus();
-    showToast("Primero ingresá un nombre para tu horario.");
-    return;
-  }
-
-  showToast(`¡Perfecto! Vamos a crear "${name}" en la próxima etapa.`);
-});
+// El botón "Continuar" del constructor se gestiona en builder.js.
 
 // En esta primera etapa todavía no guardamos horarios reales.
 // Estos contadores quedan preparados para conectarlos con localStorage.

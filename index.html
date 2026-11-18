@@ -6,11 +6,12 @@
   <meta name="theme-color" content="#111318">
   <meta name="description" content="TIMEGRID: organiza tu tiempo y crea horarios a tu manera.">
   <title>TIMEGRID — Organiza tu tiempo</title>
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="images/favicon.png.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="CSS/styles.css">
+  <link rel="stylesheet" href="CSS/builder.css">
 </head>
 <body>
   <div class="app-shell">
@@ -116,12 +117,52 @@
           <div class="panel form-panel">
             <div class="panel-heading"><div><span class="step-number">01</span><h2>Datos generales</h2></div><span class="panel-muted">PASO 1 DE 2</span></div>
             <label class="field-label" for="schedule-name">Nombre del horario</label>
-            <input class="text-input" id="schedule-name" type="text" placeholder="Ej. Facultad 2027" maxlength="45">
+            <input class="text-input" id="schedule-name" type="text" placeholder="Ej. Facultad 2027" maxlength="45" autocomplete="off" aria-describedby="schedule-name-error">
+            <p class="field-error" id="schedule-name-error" role="alert" hidden></p>
             <p class="field-hint">Elegí un nombre que te ayude a identificarlo.</p>
+
             <div class="panel-divider"></div>
-            <div class="panel-heading"><div><span class="step-number">02</span><h2>Actividades</h2></div><span class="panel-muted">PRÓXIMAMENTE</span></div>
-            <div class="empty-activities"><div class="empty-icon">＋</div><strong>Todavía no hay actividades</strong><p>En el siguiente paso vas a poder agregar materias, trabajo, entrenamientos y mucho más.</p></div>
-            <button class="button button-primary button-wide" id="start-builder">Continuar <span class="button-arrow">→</span></button>
+
+            <div class="panel-heading"><div><span class="step-number">02</span><h2>Actividades</h2></div><span class="panel-muted">PASO 2 DE 2</span></div>
+
+            <form class="activity-form" id="activity-form" novalidate>
+              <div class="form-mode">
+                <h3 id="form-title">Nueva actividad</h3>
+                <span class="editing-badge" id="editing-badge" hidden>EDITANDO</span>
+              </div>
+
+              <label class="field-label" for="activity-name">Nombre de la actividad</label>
+              <input class="text-input" id="activity-name" type="text" placeholder="Ej. Programación" maxlength="40" autocomplete="off">
+
+              <div class="field-label color-label"><span>Color</span><span class="color-name" id="color-name"></span></div>
+              <div class="color-palette" id="color-palette" role="radiogroup" aria-label="Color de la actividad"></div>
+
+              <div class="shifts-heading">
+                <span class="field-label">Turnos</span>
+                <span class="shift-counter" id="shift-counter">0 turnos</span>
+              </div>
+              <div class="shifts-list" id="shifts-list"></div>
+              <button class="button button-secondary button-add-shift" type="button" id="add-shift">＋ Agregar otro turno</button>
+
+              <div class="form-errors" id="form-errors" role="alert" hidden></div>
+
+              <div class="form-actions">
+                <button class="button button-primary" type="submit" id="submit-activity">Guardar actividad</button>
+                <button class="button button-secondary" type="button" id="cancel-edit" hidden>Cancelar edición</button>
+              </div>
+            </form>
+
+            <div class="panel-divider"></div>
+
+            <div class="list-heading">
+              <h3>Actividades cargadas</h3>
+              <span class="activity-count" id="activity-count">0</span>
+            </div>
+            <div class="empty-activities" id="activities-empty"><div class="empty-icon">＋</div><strong>Todavía no hay actividades</strong><p>Agregá tu primera actividad con el formulario de arriba: materias, trabajo, entrenamientos y mucho más.</p></div>
+            <div class="activity-list" id="activity-list"></div>
+
+            <div class="status-box" id="continue-status" role="status" hidden></div>
+            <button class="button button-primary button-wide" id="start-builder" type="button">Continuar <span class="button-arrow">→</span></button>
           </div>
           <aside class="builder-aside">
             <div class="aside-card">
@@ -150,5 +191,6 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="js/app.js"></script>
+  <script src="js/builder.js"></script>
 </body>
 </html>
