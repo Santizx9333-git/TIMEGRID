@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="CSS/styles.css">
   <link rel="stylesheet" href="CSS/builder.css">
+  <link rel="stylesheet" href="CSS/schedule.css">
 </head>
 <body>
   <div class="app-shell">
@@ -44,7 +45,7 @@
         <div class="sidebar-footer">
           <span class="status-dot"></span>
           <span>Tu espacio personal</span>
-          <span class="version">v0.1</span>
+          <span class="version">v0.3</span>
         </div>
       </div>
     </aside>
@@ -161,6 +162,7 @@
             <div class="empty-activities" id="activities-empty"><div class="empty-icon">＋</div><strong>Todavía no hay actividades</strong><p>Agregá tu primera actividad con el formulario de arriba: materias, trabajo, entrenamientos y mucho más.</p></div>
             <div class="activity-list" id="activity-list"></div>
 
+            <div class="conflict-panel" id="conflict-panel" role="alert" hidden></div>
             <div class="status-box" id="continue-status" role="status" hidden></div>
             <button class="button button-primary button-wide" id="start-builder" type="button">Continuar <span class="button-arrow">→</span></button>
           </div>
@@ -172,6 +174,33 @@
             <div class="aside-note"><span>ⓘ</span><p>Los horarios se guardarán localmente en este navegador. No necesitás crear una cuenta.</p></div>
           </aside>
         </div>
+        <footer class="page-footer"><span>TIMEGRID © 2026</span><span>Diseñado para organizar mejor tu tiempo.</span></footer>
+      </section>
+
+      <section class="view" id="view-schedule">
+        <div class="page-intro schedule-intro">
+          <div>
+            <p class="eyebrow">TU SEMANA</p>
+            <h1 id="schedule-title">Mi horario</h1>
+            <p>Así queda tu semana. Cada actividad conserva el color que le elegiste.</p>
+          </div>
+          <button class="button button-secondary" data-view="builder">← Volver al constructor</button>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-item"><span class="stat-label">ACTIVIDADES</span><strong id="stat-activities">0</strong></div>
+          <div class="summary-item"><span class="stat-label">TURNOS</span><strong id="stat-shifts">0</strong></div>
+          <div class="summary-item"><span class="stat-label">CARGA SEMANAL</span><strong id="stat-hours">0 min</strong></div>
+        </div>
+
+        <div class="panel week-panel">
+          <div class="week-scroll" id="week-scroll"></div>
+        </div>
+
+        <h3 class="legend-title">Actividades</h3>
+        <ul class="schedule-legend" id="schedule-legend"></ul>
+
+        <div class="aside-note schedule-note"><span>ⓘ</span><p>Volvé al constructor cuando quieras para ajustar actividades o turnos. El guardado de horarios llega en una etapa posterior.</p></div>
         <footer class="page-footer"><span>TIMEGRID © 2026</span><span>Diseñado para organizar mejor tu tiempo.</span></footer>
       </section>
 
@@ -191,6 +220,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="js/app.js"></script>
+  <script src="js/schedule.js"></script>
   <script src="js/builder.js"></script>
 </body>
 </html>

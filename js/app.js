@@ -9,14 +9,17 @@ const toast = document.getElementById("toast");
 const viewNames = {
   home: "Inicio",
   builder: "Crear horario",
+  schedule: "Vista semanal",
   saved: "Mis horarios"
 };
 
 function showView(viewName) {
   views.forEach((view) => view.classList.toggle("active", view.id === `view-${viewName}`));
 
+  // La vista semanal es parte del flujo de "Crear horario".
+  const activeNav = viewName === "schedule" ? "builder" : viewName;
   document.querySelectorAll(".nav-link").forEach((button) => {
-    button.classList.toggle("active", button.dataset.view === viewName);
+    button.classList.toggle("active", button.dataset.view === activeNav);
   });
 
   pageName.textContent = viewNames[viewName] || "Inicio";

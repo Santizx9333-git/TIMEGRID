@@ -1,21 +1,12 @@
-// TIMEGRID — Etapa 2: constructor de actividades
-// Formulario, CRUD de actividades, turnos, validaciones y renderizado.
+// TIMEGRID — constructor de actividades (Etapas 2 y 3)
+// Formulario, CRUD de actividades, turnos, validaciones, avisos de superposición y renderizado.
 // Los datos viven solo en memoria (la persistencia llega en una etapa posterior).
 (() => {
   "use strict";
 
   /* ---------- Constantes ---------- */
-  const DIAS = [
-    { value: "lunes", label: "Lunes" },
-    { value: "martes", label: "Martes" },
-    { value: "miercoles", label: "Miércoles" },
-    { value: "jueves", label: "Jueves" },
-    { value: "viernes", label: "Viernes" },
-    { value: "sabado", label: "Sábado" },
-    { value: "domingo", label: "Domingo" }
-  ];
-  const DIA_ORDEN = Object.fromEntries(DIAS.map((d, i) => [d.value, i]));
-  const DIA_LABEL = Object.fromEntries(DIAS.map((d) => [d.value, d.label]));
+  const TG = window.TimeGridSchedule; // helpers y constantes compartidas (schedule.js)
+  const { DIAS, DIA_ORDEN, DIA_LABEL } = TG;
 
   const COLORES = [
     { nombre: "Violeta", valor: "#9875FF" },
@@ -35,6 +26,8 @@
     pendingDeleteId: null
   };
   let deleteTimer = null;
+  let conflictosActuales = [];
+  let idsEnConflicto = new Set();
 
   /* ---------- Referencias al DOM ---------- */
   const $ = (id) => document.getElementById(id);
@@ -56,6 +49,7 @@
     list: $("activity-list"),
     empty: $("activities-empty"),
     count: $("activity-count"),
+    conflictPanel: $("conflict-panel"),
     continueBtn: $("start-builder"),
     continueStatus: $("continue-status")
   };
@@ -245,6 +239,7 @@
     }
 
     const vistos = new Map(); // clave -> número de turno
+    const validos = []; // turnos completos y sin duplicar, para comparar superposiciones
 
     turnos.forEach((turno, index) => {
       const n = index + 1;
@@ -281,9 +276,17 @@
           { uid: turno.uid, campo: "inicio" },
           { uid: turno.uid, campo: "fin" }
         );
-      } else {
-        vistos.set(clave, n);
+        return;
       }
+
+      vistos.set(clave, n);
+
+      const choque = validos.find((v) => TG.seSuperponen(v.turno, turno));
+      if (choque) {
+        errores.push(`Turno ${n}: se superpone con el turno ${choque.n} (${describirTurno(choque.turno)}) de esta misma actividad.`);
+        invalidos.push({ uid: turno.uid, campo: "inicio" }, { uid: turno.uid, campo: "fin" });
+      }
+      validos.push({ n, turno });
     });
 
     return { errores, invalidos };
@@ -332,6 +335,9 @@
       turnos.map(({ dia, inicio, fin }) => ({ dia, inicio, fin }))
     );
 
+    let idGuardada = state.editingId;
+    const mensajeOk = state.editingId ? `Actividad "${nombre}" actualizada.` : `Actividad "${nombre}" agregada.`;
+
     if (state.editingId) {
       const actividad = state.actividades.find((a) => a.id === state.editingId);
       if (actividad) {
@@ -339,20 +345,24 @@
         actividad.color = state.color;
         actividad.turnos = turnosLimpios;
       }
-      showToast(`Actividad "${nombre}" actualizada.`);
     } else {
+      idGuardada = createId();
       state.actividades.push({
-        id: createId(),
+        id: idGuardada,
         nombre,
         color: state.color,
         turnos: turnosLimpios
       });
-      showToast(`Actividad "${nombre}" agregada.`);
     }
 
     reiniciarFormulario();
     renderActividades();
     limpiarEstadoContinuar();
+
+    const choques = conflictosActuales.filter((c) => c.a.id === idGuardada || c.b.id === idGuardada);
+    showToast(choques.length > 0
+      ? `${mensajeOk} Ojo: se superpone con otra actividad.`
+      : mensajeOk);
   }
 
   function editarActividad(id) {
@@ -431,6 +441,8 @@
     const card = crearElemento("article", "activity-card");
     card.style.setProperty("--card-color", actividad.color);
     if (actividad.id === state.editingId) card.classList.add("is-editing");
+    const enConflicto = idsEnConflicto.has(actividad.id);
+    if (enConflicto) card.classList.add("has-conflict");
 
     const header = crearElemento("div", "activity-card-header");
     const dot = crearElemento("span", "activity-dot");
@@ -438,6 +450,7 @@
     const titulo = crearElemento("h4", "activity-title", actividad.nombre);
     const badge = crearElemento("span", "activity-badge", pluralTurnos(actividad.turnos.length));
     header.append(dot, titulo, badge);
+    if (enConflicto) header.appendChild(crearElemento("span", "activity-badge warn", "⚠ Superposición"));
 
     const turnos = crearElemento("ul", "activity-shifts");
     ordenarTurnos(actividad.turnos).forEach((turno) => {
@@ -471,7 +484,38 @@
     return card;
   }
 
+  function renderConflictos() {
+    conflictosActuales = TG.detectarConflictos(state.actividades);
+    idsEnConflicto = new Set(conflictosActuales.flatMap((c) => [c.a.id, c.b.id]));
+
+    el.conflictPanel.replaceChildren();
+    el.conflictPanel.hidden = conflictosActuales.length === 0;
+    if (conflictosActuales.length === 0) return;
+
+    const total = conflictosActuales.length;
+    el.conflictPanel.append(
+      crearElemento("strong", "", `⚠ ${total} ${total === 1 ? "superposición detectada" : "superposiciones detectadas"}`),
+      crearElemento("p", "conflict-note", "Dos actividades no pueden ocupar el mismo día y horario. Editá los turnos para resolverlo.")
+    );
+
+    const lista = crearElemento("ul", "conflict-list");
+    conflictosActuales.forEach(({ a, b, turnoA, turnoB, dia }) => {
+      const item = crearElemento("li");
+      item.append(
+        crearElemento("span", "conflict-names", `${a.nombre} ↔ ${b.nombre}`),
+        crearElemento(
+          "span",
+          "conflict-when",
+          `${DIA_LABEL[dia]} · ${turnoA.inicio}–${turnoA.fin} y ${turnoB.inicio}–${turnoB.fin}`
+        )
+      );
+      lista.appendChild(item);
+    });
+    el.conflictPanel.appendChild(lista);
+  }
+
   function renderActividades() {
+    renderConflictos();
     el.list.replaceChildren(...state.actividades.map(crearTarjeta));
     el.count.textContent = String(state.actividades.length);
     el.empty.hidden = state.actividades.length > 0;
@@ -523,11 +567,18 @@
       return;
     }
 
-    mostrarEstadoContinuar("success", [
-      `¡Todo listo! "${nombre}" tiene ${state.actividades.length === 1 ? "1 actividad" : `${state.actividades.length} actividades`}.`,
-      "La generación de la tabla semanal se implementará en la Etapa 3."
-    ]);
-    showToast("La tabla semanal llega en la Etapa 3.");
+    if (conflictosActuales.length > 0) {
+      const n = conflictosActuales.length;
+      mostrarEstadoContinuar("error", [
+        `Hay ${n} ${n === 1 ? "superposición" : "superposiciones"} entre actividades. Resolvela${n === 1 ? "" : "s"} para generar la tabla semanal.`
+      ]);
+      el.conflictPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    limpiarEstadoContinuar();
+    TG.mostrar(nombre, state.actividades);
+    showView("schedule");
   }
 
   /* ---------- Inicialización ---------- */
