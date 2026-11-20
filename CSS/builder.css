@@ -95,3 +95,9 @@ input[type="time"].text-input { min-width: 0; }
   .activity-list { grid-template-columns: 1fr; }
   .form-actions .button { flex: 1 1 100%; }
 }
+
+/* Aviso de modo: horario nuevo o editando uno guardado */
+.builder-mode { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 10px 14px; border: 1px solid #3a3254; border-radius: 9px; background: #241f35; color: #c6b4ff; font-size: 11px; font-weight: 600; }
+.link-button { padding: 4px 2px; border: 0; background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.link-button:hover { color: var(--text); }
+.link-button.confirming { color: var(--danger); }

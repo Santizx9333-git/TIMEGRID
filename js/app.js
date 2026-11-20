@@ -50,34 +50,4 @@ function showToast(message) {
 
 // El botón "Continuar" del constructor se gestiona en builder.js.
 
-// En esta primera etapa todavía no guardamos horarios reales.
-// Estos contadores quedan preparados para conectarlos con localStorage.
-function updateScheduleCounters() {
-  const savedSchedules = JSON.parse(localStorage.getItem("timegrid-schedules") || "[]");
-  const count = savedSchedules.length;
-
-  document.getElementById("saved-count").textContent = count;
-  document.getElementById("home-saved-count").textContent = String(count).padStart(2, "0");
-
-  const emptyState = document.getElementById("saved-empty");
-  const savedList = document.getElementById("saved-list");
-
-  emptyState.hidden = count > 0;
-  savedList.innerHTML = "";
-
-  savedSchedules.forEach((schedule) => {
-    const card = document.createElement("article");
-    card.className = "saved-card";
-
-    const title = document.createElement("h3");
-    title.textContent = schedule.nombre || "Horario sin nombre";
-
-    const description = document.createElement("p");
-    description.textContent = `${(schedule.actividades || []).length} actividades`;
-
-    card.append(title, description);
-    savedList.appendChild(card);
-  });
-}
-
-updateScheduleCounters();
+// El guardado vive en storage.js y la vista "Mis horarios" (con sus contadores) en library.js.

@@ -1,4 +1,4 @@
-// TIMEGRID — constructor de actividades (Etapas 2 y 3)
+// TIMEGRID — constructor de actividades (Etapas 2, 3 y 4)
 // Formulario, CRUD de actividades, turnos, validaciones, avisos de superposición y renderizado.
 // Los datos viven solo en memoria (la persistencia llega en una etapa posterior).
 (() => {
@@ -23,10 +23,13 @@
     editingId: null,
     color: COLORES[0].valor,
     turnosBorrador: [],
-    pendingDeleteId: null
+    pendingDeleteId: null,
+    horarioId: null // id del horario guardado que se está editando (null = horario nuevo)
   };
   let deleteTimer = null;
   let conflictosActuales = [];
+  let confirmandoReinicio = false;
+  let reinicioTimer = null;
   let idsEnConflicto = new Set();
 
   /* ---------- Referencias al DOM ---------- */
@@ -50,6 +53,9 @@
     empty: $("activities-empty"),
     count: $("activity-count"),
     conflictPanel: $("conflict-panel"),
+    builderMode: $("builder-mode"),
+    builderModeText: $("builder-mode-text"),
+    resetBuilder: $("reset-builder"),
     continueBtn: $("start-builder"),
     continueStatus: $("continue-status")
   };
@@ -519,6 +525,7 @@
     el.list.replaceChildren(...state.actividades.map(crearTarjeta));
     el.count.textContent = String(state.actividades.length);
     el.empty.hidden = state.actividades.length > 0;
+    actualizarModoConstructor();
     el.list.hidden = state.actividades.length === 0;
   }
 
@@ -577,8 +584,81 @@
     }
 
     limpiarEstadoContinuar();
-    TG.mostrar(nombre, state.actividades);
+    TG.mostrar({ id: state.horarioId, nombre, actividades: state.actividades });
     showView("schedule");
+  }
+
+  /* ---------- Horarios guardados: modo de edición, carga y reinicio ---------- */
+  function hayContenido() {
+    return state.actividades.length > 0 || el.scheduleName.value.trim() !== "" || state.horarioId !== null;
+  }
+
+  // Hay un borrador que se perdería al reemplazarlo: contenido que no coincide con lo guardado.
+  function hayBorradorSinGuardar() {
+    if (state.actividades.length === 0) return false;
+    const guardado = state.horarioId ? window.TimeGridStorage.obtener(state.horarioId) : null;
+    if (!guardado) return true;
+    return TG.firmaHorario(guardado) !== TG.firmaHorario({
+      nombre: el.scheduleName.value.trim(),
+      actividades: state.actividades
+    });
+  }
+
+  function actualizarModoConstructor() {
+    el.builderMode.hidden = !hayContenido();
+    el.builderModeText.textContent = state.horarioId
+      ? "Editando un horario guardado"
+      : "Horario nuevo · todavía sin guardar";
+  }
+
+  function restablecerBotonReinicio() {
+    confirmandoReinicio = false;
+    window.clearTimeout(reinicioTimer);
+    el.resetBuilder.textContent = "Empezar de cero";
+    el.resetBuilder.classList.remove("confirming");
+  }
+
+  function reiniciarTodo() {
+    state.horarioId = null;
+    state.actividades = [];
+    el.scheduleName.value = "";
+    limpiarErrorNombreHorario();
+    limpiarEstadoContinuar();
+    restablecerBotonReinicio();
+    reiniciarFormulario();
+    renderActividades();
+    actualizarModoConstructor();
+  }
+
+  // Primer clic pide confirmación si hay datos; segundo clic limpia todo.
+  function pedirReinicioTotal() {
+    if (!confirmandoReinicio && (state.actividades.length > 0 || el.scheduleName.value.trim())) {
+      confirmandoReinicio = true;
+      el.resetBuilder.textContent = "¿Seguro? Se borra lo cargado";
+      el.resetBuilder.classList.add("confirming");
+      reinicioTimer = window.setTimeout(restablecerBotonReinicio, 3500);
+      return;
+    }
+    reiniciarTodo();
+  }
+
+  // Carga un horario guardado en el constructor para verlo o editarlo.
+  function cargarHorario(horario, { irAlConstructor = true } = {}) {
+    state.horarioId = horario.id;
+    el.scheduleName.value = horario.nombre;
+    state.actividades = JSON.parse(JSON.stringify(horario.actividades));
+    state.pendingDeleteId = null;
+    limpiarErrorNombreHorario();
+    limpiarEstadoContinuar();
+    restablecerBotonReinicio();
+    reiniciarFormulario();
+    renderActividades();
+    actualizarModoConstructor();
+
+    if (irAlConstructor) {
+      showView("builder");
+      showToast(`Editando "${horario.nombre}".`);
+    }
   }
 
   /* ---------- Inicialización ---------- */
@@ -596,6 +676,18 @@
     el.addShift.addEventListener("click", agregarTurno);
     el.cancel.addEventListener("click", cancelarEdicion);
     el.continueBtn.addEventListener("click", continuar);
+    el.resetBuilder.addEventListener("click", pedirReinicioTotal);
+    el.scheduleName.addEventListener("input", actualizarModoConstructor);
+
+    // Mantiene el vínculo con el horario guardado cuando se guarda o se borra desde otras vistas.
+    document.addEventListener(TG.EVENTO_CAMBIOS, (evento) => {
+      const { origen, horario, eliminadoId } = evento.detail || {};
+      if (origen === "schedule" && horario) state.horarioId = horario.id;
+      if (origen === "library" && eliminadoId && eliminadoId === state.horarioId) state.horarioId = null;
+      actualizarModoConstructor();
+    });
+
+    window.TimeGridBuilder = { cargar: cargarHorario, hayBorradorSinGuardar };
   }
 
   init();

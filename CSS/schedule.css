@@ -1,38 +1,123 @@
-/* TIMEGRID — Etapa 3: tabla semanal y avisos de superposición */
+/* TIMEGRID — vista semanal, tabla, agenda y avisos de superposición */
 
 /* Cabecera de la vista */
 .schedule-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
-.schedule-intro h1 { max-width: 760px; }
+.schedule-intro h1 { max-width: 760px; overflow-wrap: anywhere; }
+.schedule-intro .button { flex: none; white-space: nowrap; }
+
+/* Barra de acciones: estado de guardado + guardar / exportar */
+.schedule-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
+.save-status { padding: 8px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--panel); color: var(--muted); font-size: 11px; font-weight: 700; }
+.save-status[data-state="saved"] { border-color: #2c5d4c; background: #1d3a31; color: var(--green); }
+.save-status[data-state="unsaved"] { border-color: #6b4a2a; background: #34281a; color: #ffd08a; }
+.toolbar-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+.button:disabled:hover { transform: none; box-shadow: none; }
 
 /* Resumen */
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
 .summary-item { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
 .summary-item strong { font: 600 28px var(--display); letter-spacing: -.5px; }
 
-/* Panel de la tabla */
-.week-panel { padding: 22px; }
-.week-scroll { overflow-x: auto; padding-bottom: 4px; }
-.week-grid { min-width: 600px; display: grid; grid-template-columns: 52px repeat(var(--days), minmax(118px, 1fr)); }
-.week-day-head { padding: 0 6px 12px; color: #c9ced9; font-size: 12px; font-weight: 600; text-align: center; }
+/* ---------- Tabla semanal ---------- */
+.week-panel { padding: 24px 24px 20px; background: linear-gradient(180deg, #1b1e27 0%, var(--panel) 120px); }
+.week-scroll { overflow-x: auto; padding-bottom: 10px; }
+.week-agenda { display: none; }
+
+.week-grid {
+  --pad: 14px;
+  --hour-h: 56px;
+  --body-h: calc(var(--pad) + var(--hour-h) * var(--hours) + 1px);
+  display: grid;
+  grid-template-columns: 56px repeat(var(--days), minmax(0, 1fr));
+}
+
+.week-day-head { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 4px 16px; color: #c9ced9; font-size: 12.5px; font-weight: 700; letter-spacing: .2px; }
+.week-day-head.today { color: #fff; }
+.week-today-tag { padding: 3px 6px; border-radius: 5px; background: #9875ff2e; color: #c6b4ff; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+
 .week-times { position: relative; height: var(--body-h); }
-.week-time-label { position: absolute; left: 0; padding-top: 4px; color: var(--subtle); font-size: 10px; font-variant-numeric: tabular-nums; }
-.week-col { position: relative; height: var(--body-h); border-left: 1px solid var(--border); background-image: linear-gradient(to bottom, var(--border) 1px, transparent 1px); background-size: 100% var(--hour-h); }
+.week-time-label { position: absolute; right: 12px; color: var(--subtle); font-size: 10.5px; font-variant-numeric: tabular-nums; line-height: 14px; }
+
+.week-col {
+  position: relative;
+  height: var(--body-h);
+  border-left: 1px solid var(--border);
+  background-image:
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, transparent calc(50% - .5px), #ffffff09 calc(50% - .5px), #ffffff09 calc(50% + .5px), transparent calc(50% + .5px));
+  background-size: 100% var(--hour-h), 100% var(--hour-h);
+  background-position: 0 var(--pad), 0 var(--pad);
+  background-repeat: repeat-y;
+  container-type: inline-size; /* permite ocultar el horario en columnas muy angostas */
+}
 .week-col:last-child { border-right: 1px solid var(--border); }
-.week-block { position: absolute; left: 4px; right: 4px; display: flex; flex-direction: column; gap: 2px; padding: 7px 9px; overflow: hidden; border-left: 3px solid var(--c); border-radius: 7px; background: #242936; background: color-mix(in srgb, var(--c) 24%, #1b1e27); color: #f1f3f9; }
-.week-block-name { font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
-.week-block-time { color: #c8ccd8; font-size: 10px; font-variant-numeric: tabular-nums; }
-.week-block.compact { flex-direction: row; align-items: center; gap: 8px; padding: 0 9px; }
-.week-block.compact .week-block-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.week-block.compact .week-block-time { flex: none; }
+.week-col.today { background-color: #9875ff0b; }
+
+/* Línea de "ahora" en la columna de hoy */
+.week-now { position: absolute; left: 0; right: 0; z-index: 3; height: 2px; background: linear-gradient(90deg, #9875ff, #c6b4ff); box-shadow: 0 0 10px #9875ff80; pointer-events: none; }
+.week-now::before { content: ""; position: absolute; left: -5px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #c6b4ff; }
+
+/* Bloques de actividad */
+.week-block {
+  position: absolute; left: 4px; right: 4px; z-index: 1;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 4px;
+  padding: 8px 10px 8px 13px; overflow: hidden;
+  border: 1px solid #333a4a; border-radius: 9px;
+  background: #242936;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--c) 40%, #1b1e27), color-mix(in srgb, var(--c) 20%, #1b1e27));
+  border-color: color-mix(in srgb, var(--c) 45%, #1b1e27);
+  box-shadow: inset 3px 0 0 var(--c), 0 6px 16px #0000003d;
+  color: #f4f5fa;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.week-block:hover { z-index: 2; transform: translateY(-1px); filter: brightness(1.12); box-shadow: inset 3px 0 0 var(--c), 0 10px 22px #00000059; }
+.week-block-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.week-block-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: 12.5px; line-height: 1.25; overflow-wrap: break-word; hyphens: auto; }
+.week-block-time { color: #cdd1dd; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.week-block-duration { display: none; align-self: flex-end; color: #ffffff8c; font-size: 10px; font-weight: 600; }
+.week-block.tall .week-block-duration { display: block; }
+.week-block.compact { flex-direction: row; align-items: center; justify-content: flex-start; padding: 0 10px 0 13px; }
+.week-block.compact .week-block-text { flex-direction: row; align-items: center; gap: 8px; width: 100%; }
+.week-block.compact .week-block-name { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.week-block.compact .week-block-time { flex: none; margin-left: auto; }
+
+@container (max-width: 132px) {
+  .week-block { padding-left: 11px; padding-right: 6px; }
+  .week-block-name { font-size: 11px; }
+  .week-block.compact .week-block-time { display: none; }
+}
+
+/* Cuando el panel es angosto, la grilla se reemplaza por una agenda vertical */
+.week-panel.is-agenda { padding: 18px; }
+.week-panel.is-agenda .week-scroll { display: none; }
+.week-panel.is-agenda .week-agenda { display: block; }
+.agenda-days { display: grid; gap: 22px; }
+.agenda-day-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.agenda-day-head h4 { margin: 0; font: 600 16px var(--display); }
+.agenda-count { margin-left: auto; color: var(--muted); font-size: 11px; }
+.agenda-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.agenda-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 13px 14px 13px 16px; border: 1px solid #333a4a; border-radius: 10px;
+  background: #242936;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--c) 34%, #1b1e27), color-mix(in srgb, var(--c) 17%, #1b1e27));
+  border-color: color-mix(in srgb, var(--c) 40%, #1b1e27);
+  box-shadow: inset 3px 0 0 var(--c);
+}
+.agenda-item-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.agenda-item-text strong { font-size: 14px; overflow-wrap: anywhere; }
+.agenda-item-text span { color: #cdd1dd; font-size: 12px; font-variant-numeric: tabular-nums; }
+.agenda-item-duration { flex: none; padding: 4px 9px; border-radius: 20px; background: #00000030; color: #ffffffb3; font-size: 11px; font-weight: 600; }
 
 /* Leyenda */
-.legend-title { margin: 22px 0 12px; font: 600 15px var(--display); }
-.schedule-note { margin-top: 18px; }
+.legend-title { margin: 24px 0 12px; font: 600 15px var(--display); }
 .schedule-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.legend-item { display: flex; align-items: center; gap: 9px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 9px; background: #171a22; font-size: 12px; }
+.legend-item { display: flex; align-items: center; gap: 9px; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; background: #171a22; font-size: 12px; }
 .legend-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); }
-.legend-name { font-weight: 600; }
+.legend-name { font-weight: 600; overflow-wrap: anywhere; }
 .legend-hours { color: var(--muted); font-size: 11px; }
+.schedule-note { margin-top: 18px; }
 
 /* Superposiciones en el constructor */
 .conflict-panel { margin-top: 18px; padding: 14px 16px; border: 1px solid #6b4a2a; border-radius: 10px; background: #34281a; color: #f1cf9c; font-size: 12px; line-height: 1.6; }
@@ -52,7 +137,9 @@
   .summary-grid { gap: 10px; }
   .summary-item { padding: 13px 14px; }
   .summary-item strong { font-size: 22px; }
-  .week-panel { padding: 14px; }
+  .week-panel { padding: 16px; }
+  .toolbar-actions { width: 100%; }
+  .toolbar-actions .button { flex: 1 1 auto; }
 }
 @media (max-width: 460px) {
   .summary-grid { grid-template-columns: 1fr 1fr; }
